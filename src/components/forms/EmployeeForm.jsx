@@ -1,144 +1,200 @@
 // src/components/forms/EmployeeForm.jsx
-import React, { useEffect, useMemo, useState } from 'react';
-import { calculateSalary } from '../../utils/salaryCalc';
-import EmployeeCard from '../payroll/EmployeeCard';
+import React, { useState, useEffect } from 'react';
 import { usePayroll } from '../../contexts/PayrollContext';
+import { calculateSalary } from '../../utils/salaryCalc';
 
-const DEPT_OPTIONS = [
-  { value: 'production', label: 'PRODUCTION' },
-  { value: 'marketing', label: 'MARKETING' },
-  { value: 'accounts', label: 'ACCOUNTS' }
-];
+// Allowed designations per department
+const DESIGNATIONS_BY_DEPT = {
+  PRODUCTION: ['JE', 'SE'],
+  MARKETING: ['ASM', 'ME'],
+  ACCOUNTS: ['CS', 'CA'],
+};
 
 export default function EmployeeForm() {
-  const { addEmployee, editEmployee } = usePayroll();
+  const { addEmployee, editEmployee, loading } = usePayroll();
 
+  const [id, setId] = useState(null);
   const [name, setName] = useState('');
-  const [department, setDepartment] = useState('production');
-  const [designation, setDesignation] = useState('je');
+  const [department, setDepartment] = useState('PRODUCTION');
+  const [designation, setDesignation] = useState('JE');
   const [basicSalary, setBasicSalary] = useState('');
-  const [editingId, setEditingId] = useState(null);
 
-  function getDesignationsForDept(dept) {
-    const map = {
-      production: ['je', 'se'],
-      marketing: ['asm', 'me'],
-      accounts: ['cs', 'ca']
-    };
-    return map[dept] || [];
-  }
+  const isEditing = id !== null;
 
+  // Valid designations for current department
+  const designationOptions = DESIGNATIONS_BY_DEPT[department] || [];
+
+  // Keep designation valid when department changes
   useEffect(() => {
-    const list = getDesignationsForDept(department);
-    if (!list.includes(designation)) {
-      setDesignation(list[0]);
+    if (!designationOptions.includes(designation)) {
+      const first = designationOptions[0] || 'JE';
+      setDesignation(first);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [department]);
 
-  // listen for edit events dispatched from cards
+  // Fill form when EDIT is clicked on a card
   useEffect(() => {
-    function onEditEvent(e) {
+    function handleEditEvent(e) {
       const emp = e.detail;
       if (!emp) return;
-      setEditingId(emp._id || null);
+
+      const dept = (emp.department || 'PRODUCTION').toUpperCase();
+      const validDesgs = DESIGNATIONS_BY_DEPT[dept] || [];
+      const rawDesg = (emp.designation || 'JE').toUpperCase();
+      const fixedDesg = validDesgs.includes(rawDesg)
+        ? rawDesg
+        : validDesgs[0] || 'JE';
+
+      setId(emp._id || null);
       setName(emp.name || '');
-      setDepartment(emp.department || 'production');
-      setDesignation(emp.designation || getDesignationsForDept(emp.department || 'production')[0]);
-      setBasicSalary(emp.basicSalary ? String(emp.basicSalary) : '');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setDepartment(dept);
+      setDesignation(fixedDesg);
+      setBasicSalary(
+        emp.basicSalary != null ? String(emp.basicSalary) : ''
+      );
     }
-    window.addEventListener('payroll:edit-employee', onEditEvent);
-    return () => window.removeEventListener('payroll:edit-employee', onEditEvent);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    window.addEventListener('payroll:edit-employee', handleEditEvent);
+    return () => {
+      window.removeEventListener('payroll:edit-employee', handleEditEvent);
+    };
   }, []);
 
-  const basicNum = Number(basicSalary) || 0;
-
-  const previewSalary = useMemo(() => {
-    return calculateSalary(basicNum, department, designation);
-  }, [basicNum, department, designation]);
-
-  const previewEmployee = {
-    empId: null,
-    name,
-    department,
-    designation,
-    basicSalary: basicNum,
-    ...previewSalary
-  };
+  function resetForm() {
+    setId(null);
+    setName('');
+    setDepartment('PRODUCTION');
+    setDesignation('JE');
+    setBasicSalary('');
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!name.trim()) return alert('Enter name');
-    if (!basicNum || basicNum <= 0) return alert('Enter a valid basic salary');
+    const basic = Number(basicSalary) || 0;
 
-    const payload = { name: name.trim(), department, designation, basicSalary: basicNum };
+    const deptKey = department.toLowerCase();
+    const desgKey = designation.toLowerCase();
+
+    const { hra, da, pf, gross } = calculateSalary(basic, deptKey, desgKey);
+
+    const payload = {
+      name: name.trim(),
+      department,
+      designation,
+      basicSalary: basic,
+      hra,
+      da,
+      pf,
+      gross,
+    };
+
     try {
-      if (editingId) {
-        await editEmployee(editingId, payload);
-        setEditingId(null);
+      if (isEditing) {
+        await editEmployee(id, payload);
       } else {
         await addEmployee(payload);
       }
-      // reset
-      setName('');
-      setBasicSalary('');
-      setDepartment('production');
-      setDesignation('je');
+      resetForm();
     } catch (err) {
-      alert('Failed to save: ' + (err?.message || err));
+      console.error('Save failed:', err);
     }
   }
 
   return (
-    <div style={{ maxWidth: 760 }}>
-      <form onSubmit={handleSubmit} style={{ marginBottom: 12, display: 'grid', gap: 8 }}>
-        <div>
-          <label style={{ display: 'block' }}>NAME</label>
-          <input name="name" value={name} onChange={e => setName(e.target.value)} placeholder="Enter employee name" />
-        </div>
+    <form onSubmit={handleSubmit} className="employee-form">
+      <div className="field">
+        <label>Name</label>
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          required
+        />
+      </div>
 
-        <div>
-          <label style={{ display: 'block' }}>DEPARTMENT</label>
-          <select name="department" value={department} onChange={e => setDepartment(e.target.value)}>
-            {DEPT_OPTIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-          </select>
-        </div>
+      <div className="field">
+        <label>Department</label>
+        <select
+          value={department}
+          onChange={e => {
+            const dept = e.target.value;
+            setDepartment(dept);
+            const firstDesg = DESIGNATIONS_BY_DEPT[dept]?.[0] || 'JE';
+            setDesignation(firstDesg);
+          }}
+        >
+          <option value="PRODUCTION">PRODUCTION</option>
+          <option value="MARKETING">MARKETING</option>
+          <option value="ACCOUNTS">ACCOUNTS</option>
+        </select>
+      </div>
 
-        <div>
-          <label style={{ display: 'block' }}>DESIGNATION</label>
-          <select name="designation" value={designation} onChange={e => setDesignation(e.target.value)}>
-            {getDesignationsForDept(department).map(d => <option key={d} value={d}>{d.toUpperCase()}</option>)}
-          </select>
-        </div>
+      <div className="field">
+        <label>Designation</label>
+        <select
+          value={designation}
+          onChange={e => setDesignation(e.target.value)}
+        >
+          {designationOptions.map(d => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        <div>
-          <label style={{ display: 'block' }}>BASIC SALARY</label>
-          <input
-            name="basicSalary"
-            value={basicSalary}
-            onChange={e => setBasicSalary(e.target.value.replace(/[^\d.]/g, ''))}
-            placeholder="Enter basic salary (numbers only)"
-          />
-        </div>
+      <div className="field">
+        <label>Basic Salary</label>
+        <input
+          type="number"
+          value={basicSalary}
+          onChange={e => setBasicSalary(e.target.value)}
+          required
+        />
+      </div>
 
-        <div>
-          <button type="submit">{editingId ? 'UPDATE EMPLOYEE' : 'SAVE EMPLOYEE'}</button>
-          {editingId && (
-            <button type="button" onClick={() => {
-              setEditingId(null);
-              setName('');
-              setBasicSalary('');
-              setDepartment('production');
-              setDesignation('je');
-            }}>CANCEL</button>
-          )}
-        </div>
-      </form>
+      <div className="actions">
+        <button type="submit" disabled={loading}>
+          {isEditing ? 'UPDATE EMPLOYEE' : 'SAVE EMPLOYEE'}
+        </button>
+        {isEditing && (
+          <button
+            type="button"
+            onClick={resetForm}
+            disabled={loading}
+          >
+            CANCEL
+          </button>
+        )}
+      </div>
 
-      <h4>LIVE PAYSLIP PREVIEW</h4>
-      <EmployeeCard employee={previewEmployee} isPreview />
-    </div>
+      {/* Live payslip preview */}
+      <div className="payslip-preview">
+        <h3>LIVE PAYSLIP PREVIEW</h3>
+        {basicSalary ? (
+          (() => {
+            const basic = Number(basicSalary) || 0;
+            const deptKey = department.toLowerCase();
+            const desgKey = designation.toLowerCase();
+            const { hra, da, pf, gross } = calculateSalary(
+              basic,
+              deptKey,
+              desgKey
+            );
+            return (
+              <>
+                <p>HRA: ₹ {hra}</p>
+                <p>DA: ₹ {da}</p>
+                <p>PF: ₹ {pf}</p>
+                <p>GROSS: ₹ {gross}</p>
+              </>
+            );
+          })()
+        ) : (
+          <p>Enter basic salary to see calculation.</p>
+        )}
+      </div>
+    </form>
   );
 }

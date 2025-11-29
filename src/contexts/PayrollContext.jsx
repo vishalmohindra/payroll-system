@@ -1,6 +1,7 @@
 // src/contexts/PayrollContext.jsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as api from '../api/employeeService';
+import { calculateSalary } from '../utils/salaryCalc';
 
 const PayrollContext = createContext();
 
@@ -19,21 +20,40 @@ export function PayrollProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // FETCH — important: do NOT clear existing employees on error
   async function fetchEmployees() {
     setLoading(true);
     setError(null);
     try {
       const data = await api.getEmployees();
-      setEmployees(Array.isArray(data) ? data.reverse() : []); // newest first
+      setEmployees(Array.isArray(data) ? data.reverse() : []);
     } catch (err) {
-      // keep previous employees in case fetch fails
       console.error('Failed to fetch employees:', err);
-      setError(err?.response?.data?.message || err?.message || 'Failed to load employees');
-      // DO NOT call setEmployees([]) here — we want to keep the UI list intact
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          'Failed to load employees'
+      );
     } finally {
       setLoading(false);
     }
+  }
+
+  // Helper: recompute HRA/DA/PF/GROSS from basic + dept + designation
+  function withCalculatedSalary(payload) {
+    const basic = Number(payload.basicSalary) || 0;
+    const deptKey = (payload.department || 'production').toLowerCase();
+    const desgKey = (payload.designation || 'je').toLowerCase();
+
+    const { hra, da, pf, gross } = calculateSalary(basic, deptKey, desgKey);
+
+    return {
+      ...payload,
+      basicSalary: basic,
+      hra,
+      da,
+      pf,
+      gross,
+    };
   }
 
   // CREATE
@@ -41,12 +61,15 @@ export function PayrollProvider({ children }) {
     setLoading(true);
     setError(null);
     try {
-      const created = await api.createEmployee(payload);
+      const finalPayload = withCalculatedSalary(payload);
+      const created = await api.createEmployee(finalPayload);
       setEmployees(prev => [created, ...prev]);
       return created;
     } catch (err) {
       console.error('Failed to create employee:', err);
-      setError(err?.response?.data?.message || err?.message || 'Create failed');
+      setError(
+        err?.response?.data?.message || err?.message || 'Create failed'
+      );
       throw err;
     } finally {
       setLoading(false);
@@ -58,30 +81,34 @@ export function PayrollProvider({ children }) {
     setLoading(true);
     setError(null);
     try {
-      const updated = await api.updateEmployee(id, payload);
+      const finalPayload = withCalculatedSalary(payload);
+      const updated = await api.updateEmployee(id, finalPayload);
       setEmployees(prev => prev.map(e => (e._id === id ? updated : e)));
       return updated;
     } catch (err) {
       console.error('Failed to update employee:', err);
-      setError(err?.response?.data?.message || err?.message || 'Update failed');
+      setError(
+        err?.response?.data?.message || err?.message || 'Update failed'
+      );
       throw err;
     } finally {
       setLoading(false);
     }
   }
 
-  // DELETE (pessimistic): call API first, only remove from UI on success
+  // DELETE
   async function removeEmployee(id) {
     setError(null);
     setLoading(true);
     try {
-      await api.deleteEmployee(id);             // wait for server confirmation
-      setEmployees(prev => prev.filter(e => e._id !== id)); // then update UI
+      await api.deleteEmployee(id);
+      setEmployees(prev => prev.filter(e => e._id !== id));
       return true;
     } catch (err) {
       console.error('Failed to delete employee:', err);
-      setError(err?.response?.data?.message || err?.message || 'Delete failed');
-      // keep UI intact
+      setError(
+        err?.response?.data?.message || err?.message || 'Delete failed'
+      );
       throw err;
     } finally {
       setLoading(false);
@@ -98,5 +125,9 @@ export function PayrollProvider({ children }) {
     removeEmployee,
   };
 
-  return <PayrollContext.Provider value={value}>{children}</PayrollContext.Provider>;
+  return (
+    <PayrollContext.Provider value={value}>
+      {children}
+    </PayrollContext.Provider>
+  );
 }
