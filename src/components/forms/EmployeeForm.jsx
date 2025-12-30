@@ -11,7 +11,7 @@ const DESIGNATIONS_BY_DEPT = {
 };
 
 export default function EmployeeForm() {
-  const { addEmployee, editEmployee, loading } = usePayroll();
+  const { addEmployee, editEmployee } = usePayroll();
 
   const [id, setId] = useState(null);
   const [name, setName] = useState('');
@@ -155,14 +155,13 @@ export default function EmployeeForm() {
       </div>
 
       <div className="actions">
-        <button type="submit" disabled={loading}>
+        <button type="submit">
           {isEditing ? 'UPDATE EMPLOYEE' : 'SAVE EMPLOYEE'}
         </button>
         {isEditing && (
           <button
             type="button"
             onClick={resetForm}
-            disabled={loading}
           >
             CANCEL
           </button>

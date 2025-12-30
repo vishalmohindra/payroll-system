@@ -2,6 +2,7 @@
 import React from 'react';
 import EmployeeForm from './components/forms/EmployeeForm';
 import PayslipList from './components/payroll/PayslipList';
+import DeptStats from './components/payroll/DeptStats';
 import './App.css';
 
 export default function App() {
@@ -9,7 +10,9 @@ export default function App() {
     <div className="app-root">
       <header className="app-header">
         <h1 className="app-title">PAYROLL SYSTEM</h1>
-        <p className="app-subtitle">SMART, SIMPLE & COLORFUL SALARY MANAGER</p>
+        <p className="app-subtitle">
+          SMART, SIMPLE & COLORFUL SALARY MANAGER
+        </p>
       </header>
 
       <main className="app-main">
@@ -19,8 +22,8 @@ export default function App() {
         </section>
 
         <aside className="app-panel app-panel--side">
-          {/* remove the dull small heading */}
           <PayslipList />
+          <DeptStats />
         </aside>
       </main>
     </div>

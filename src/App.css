@@ -227,3 +227,15 @@ textarea {
 .payslip-card__actions button {
   flex: 1;
 }
+.dept-stats {
+  margin-top: 24px;
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.dept-stats__row + .dept-stats__row {
+  margin-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 12px;
+}
