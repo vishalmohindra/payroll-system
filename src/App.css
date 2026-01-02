@@ -239,3 +239,43 @@ textarea {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 12px;
 }
+/* Department Tabs */
+.dept-tabs {
+  margin-bottom: 20px;
+}
+
+.tab-header {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  padding: 8px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab, .tab-active {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px 8px 0 0;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.tab-active {
+  background: var(--primary-color, #007bff);
+  color: white;
+  border-bottom-color: var(--primary-color);
+}
+
+.tab-count {
+  margin-left: 6px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.tab:hover {
+  background: #f8f9fa;
+}
