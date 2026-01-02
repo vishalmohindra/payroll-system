@@ -279,3 +279,25 @@ textarea {
 .tab:hover {
   background: #f8f9fa;
 }
+/* Department Navigation */
+.dept-nav {
+  margin-bottom: 20px;
+}
+
+.dept-link {
+  display: block;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.dept-link:hover {
+  background: var(--primary-color, #007bff);
+  color: white;
+}
