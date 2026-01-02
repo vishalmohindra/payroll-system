@@ -2,59 +2,65 @@
 import React from 'react';
 
 export default function DeptStats({ employees = [] }) {
-  const departments = ['PRODUCTION', 'MARKETING', 'ACCOUNTS'];
+  // Group employees by department
+  const depts = {
+    PRODUCTION: employees.filter(emp => emp.department === 'PRODUCTION'),
+    MARKETING: employees.filter(emp => emp.department === 'MARKETING'),
+    ACCOUNTS: employees.filter(emp => emp.department === 'ACCOUNTS')
+  };
 
-  const deptData = departments.map(dept => {
-    const deptEmployees = employees.filter(
-      emp => emp.department?.toUpperCase() === dept
-    );
-    
-    const totalSalary = deptEmployees.reduce(
-      (sum, emp) => sum + (emp.salary || 0), 0
-    );
-
-    return {
-      name: dept,
-      count: deptEmployees.length,
-      total: totalSalary,
-      highest: Math.max(...deptEmployees.map(emp => emp.salary || 0)),
-      avg: deptEmployees.length ? (totalSalary / deptEmployees.length).toFixed(0) : 0
-    };
-  });
-
-  const grandTotal = deptData.reduce((sum, d) => sum + d.total, 0);
-  const totalEmployees = deptData.reduce((sum, d) => sum + d.count, 0);
+  // Calculate stats for each dept
+  const stats = {
+    PRODUCTION: {
+      count: depts.PRODUCTION.length,
+      highest: Math.max(...depts.PRODUCTION.map(emp => emp.gross || 0)) || 0,
+      lowest: Math.min(...depts.PRODUCTION.map(emp => emp.gross || 0)) || 0,
+      average: depts.PRODUCTION.length 
+        ? Math.round(depts.PRODUCTION.reduce((sum, emp) => sum + (emp.gross || 0), 0) / depts.PRODUCTION.length)
+        : 0
+    },
+    MARKETING: {
+      count: depts.MARKETING.length,
+      highest: Math.max(...depts.MARKETING.map(emp => emp.gross || 0)) || 0,
+      lowest: Math.min(...depts.MARKETING.map(emp => emp.gross || 0)) || 0,
+      average: depts.MARKETING.length 
+        ? Math.round(depts.MARKETING.reduce((sum, emp) => sum + (emp.gross || 0), 0) / depts.MARKETING.length)
+        : 0
+    },
+    ACCOUNTS: {
+      count: depts.ACCOUNTS.length,
+      highest: Math.max(...depts.ACCOUNTS.map(emp => emp.gross || 0)) || 0,
+      lowest: Math.min(...depts.ACCOUNTS.map(emp => emp.gross || 0)) || 0,
+      average: depts.ACCOUNTS.length 
+        ? Math.round(depts.ACCOUNTS.reduce((sum, emp) => sum + (emp.gross || 0), 0) / depts.ACCOUNTS.length)
+        : 0
+    }
+  };
 
   return (
     <div className="dept-stats">
-      <div className="stats-grid">
-        {deptData.map(dept => (
-          <div key={dept.name} className="stat-card">
-            <h4>{dept.name}</h4>
-            <div className="stat-item">
-              <span>Employees:</span> <strong>{dept.count}</strong>
-            </div>
-            <div className="stat-item">
-              <span>Total:</span> <strong>₹{dept.total.toLocaleString()}</strong>
-            </div>
-            <div className="stat-item">
-              <span>Highest:</span> <strong>₹{dept.highest.toLocaleString()}</strong>
-            </div>
-            <div className="stat-item">
-              <span>Avg:</span> <strong>₹{dept.avg.toLocaleString()}</strong>
-            </div>
-          </div>
-        ))}
+      <div className="dept-card">
+        <h4>PRODUCTION</h4>
+        <p>Employees: {stats.PRODUCTION.count}</p>
+        <p>Highest: ₹{stats.PRODUCTION.highest}</p>
+        <p>Lowest: ₹{stats.PRODUCTION.lowest}</p>
+        <p>Avg: ₹{stats.PRODUCTION.average}</p>
       </div>
-
-      <div className="grand-total">
-        <h4>GRAND TOTAL</h4>
-        <div className="stat-item">
-          <span>Employees:</span> <strong>{totalEmployees}</strong>
-        </div>
-        <div className="stat-item grand">
-          <span>Total Salary:</span> <strong>₹{grandTotal.toLocaleString()}</strong>
-        </div>
+      
+      <div className="dept-card">
+        <h4>MARKETING</h4>
+        <p>Employees: {stats.MARKETING.count}</p>
+        <p>Highest: ₹{stats.MARKETING.highest}</p>
+        <p>Lowest: ₹{stats.MARKETING.lowest}</p>
+        <p>Avg: ₹{stats.MARKETING.average}</p>
+      </div>
+      
+      <div className="dept-card">
+        <h4>ACCOUNTS</h4>
+        <p>Employees: {stats.ACCOUNTS.count}</p>
+        <p>Highest: ₹{stats.ACCOUNTS.highest}</p>
+        <p>Lowest: ₹{stats.ACCOUNTS.lowest}</p>
+        <p>Avg: ₹{stats.ACCOUNTS.average}</p>
       </div>
     </div>
   );

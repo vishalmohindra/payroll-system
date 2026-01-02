@@ -128,3 +128,48 @@ select {
   color: #fbbf24;                 /* bright yellow */
   font-weight: 700;
 }
+/* Stats Page */
+.stats-page {
+  margin-top: 20px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.stat-card h4 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.grand-total {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.grand-total .grand {
+  font-size: 24px;
+  margin-top: 12px;
+  font-weight: bold;
+}
