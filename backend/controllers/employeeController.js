@@ -1,4 +1,3 @@
-// backend/controllers/employeeController.js
 const Employee = require('../models/Employee');
 
 // helper to generate empId if frontend doesn't send one
@@ -14,45 +13,39 @@ function makeEmpId() {
 // helper to compute salary parts
 function computeSalaryParts(basicSalary) {
   const basic = Number(basicSalary) || 0;
-
   const hra = Math.round(basic * 0.2);   // 20%
   const da  = Math.round(basic * 0.1);   // 10%
   const pf  = Math.round(basic * 0.11);  // 11%
-
   const gross = basic + hra + da - pf;
-
   return { hra, da, pf, gross };
 }
 
-// GET /api/employees
+// DEBUG GET /api/employees - REPLACES OLD
 async function listEmployees(req, res) {
   try {
-    const filter = {};
-    if (req.query.department) {
-      filter.department = req.query.department;
-    }
-    const employees = await Employee.find(filter).sort({ createdAt: -1 });
+    console.log('🔍 GET /api/employees called');
+    console.log('📊 Models connected:', !!Employee);
+    
+    const employees = await Employee.find({});
+    console.log('✅ Found employees:', employees.length);
+    console.log('📋 First employee:', employees[0] ? employees[0].name : 'none');
+    
     return res.json(employees);
   } catch (err) {
-    console.error('GET /api/employees error', err);
-    return res
-      .status(500)
-      .json({ message: 'Server error listing employees' });
+    console.error('❌ GET /api/employees ERROR:', err.message);
+    return res.status(500).json({ message: err.message });
   }
 }
 
-// POST /api/employees
+// POST /api/employees (unchanged)
 async function createEmployee(req, res) {
   try {
     const payload = { ...req.body };
-
     if (!payload.empId) {
       payload.empId = makeEmpId();
     }
-
     const parts = computeSalaryParts(payload.basicSalary);
     Object.assign(payload, parts);
-
     const emp = new Employee(payload);
     await emp.save();
     return res.status(201).json(emp);
@@ -64,21 +57,18 @@ async function createEmployee(req, res) {
   }
 }
 
-// PUT /api/employees/:id
+// PUT /api/employees/:id (unchanged)
 async function updateEmployee(req, res) {
   const id = req.params.id;
   if (!id) {
     return res.status(400).json({ message: 'Missing id parameter' });
   }
-
   try {
     const payload = { ...req.body };
-
     if (payload.basicSalary != null) {
       const parts = computeSalaryParts(payload.basicSalary);
       Object.assign(payload, parts);
     }
-
     const updated = await Employee.findByIdAndUpdate(id, payload, {
       new: true,
       runValidators: true,
@@ -89,19 +79,16 @@ async function updateEmployee(req, res) {
     return res.json(updated);
   } catch (err) {
     console.error('PUT /api/employees/:id error', err);
-    return res
-      .status(500)
-      .json({ message: 'Server error updating employee' });
+    return res.status(500).json({ message: 'Server error updating employee' });
   }
 }
 
-// DELETE /api/employees/:id
+// DELETE /api/employees/:id (unchanged)
 async function deleteEmployee(req, res) {
   const id = req.params.id;
   if (!id) {
     return res.status(400).json({ message: 'Missing id parameter' });
   }
-
   try {
     const doc = await Employee.findByIdAndDelete(id);
     if (!doc) {
@@ -110,9 +97,7 @@ async function deleteEmployee(req, res) {
     return res.json(doc);
   } catch (err) {
     console.error('DELETE /api/employees/:id error', err);
-    return res
-      .status(500)
-      .json({ message: 'Server error deleting employee' });
+    return res.status(500).json({ message: 'Server error deleting employee' });
   }
 }
 
