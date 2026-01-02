@@ -1,16 +1,15 @@
 // src/App.jsx
 import React from 'react';
-import { Routes, Route, Link, useParams } from 'react-router-dom';
+import { Routes, Route, Link } from 'react-router-dom';
 import EmployeeForm from './components/forms/EmployeeForm';
 import DepartmentPage from './components/payroll/DepartmentPage';
-import DeptStats from './components/payroll/DeptStats';
+import StatsPage from './components/payroll/StatsPage';
 import { usePayroll } from './contexts/PayrollContext';
 import './App.css';
 
 function Dashboard() {
   const { employees = [] } = usePayroll();
 
-  // Filter out demo users
   const visibleEmployees = employees.filter(
     emp => emp && emp.name?.toLowerCase() !== 'demo user'
   );
@@ -33,7 +32,7 @@ function Dashboard() {
         </section>
 
         <aside className="app-panel app-panel--side">
-          <div className="dept-nav">
+          <nav className="dept-nav">
             <Link to="/" className="dept-link">
               Dashboard ({visibleEmployees.length})
             </Link>
@@ -46,16 +45,18 @@ function Dashboard() {
             <Link to="/accounts" className="dept-link">
               ACCOUNTS ({getDeptCount('ACCOUNTS')})
             </Link>
-          </div>
+            <Link to="/stats" className="dept-link stats-link">
+              📊 STATS
+            </Link>
+          </nav>
 
           <Routes>
             <Route path="/" element={<DepartmentPage />} />
             <Route path="/production" element={<DepartmentPage />} />
             <Route path="/marketing" element={<DepartmentPage />} />
             <Route path="/accounts" element={<DepartmentPage />} />
+            <Route path="/stats" element={<StatsPage />} />
           </Routes>
-
-          <DeptStats />
         </aside>
       </main>
     </div>
