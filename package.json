@@ -5,14 +5,12 @@
   "type": "module",
   "homepage": "https://vishalmohindra.github.io/payroll-system/",
   "scripts": {
-    "dev": "vite --base /payroll-system/",
-    "dev:root": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview --base /payroll-system/",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
-  },
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview",
+  "lint": "eslint ."
+},
+
   "dependencies": {
     "axios": "^1.13.2",
     "react": "^19.2.0",
